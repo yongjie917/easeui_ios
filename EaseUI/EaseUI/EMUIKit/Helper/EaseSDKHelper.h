@@ -1,17 +1,27 @@
-//
-//  EaseSDKHelper.h
-//  ChatDemo-UI3.0
-//
-//  Created by dhc on 15/6/24.
-//  Copyright (c) 2015年 easemob.com. All rights reserved.
-//
+/************************************************************
+ *  * Hyphenate CONFIDENTIAL
+ * __________________
+ * Copyright (C) 2016 Hyphenate Inc. All rights reserved.
+ *
+ * NOTICE: All information contained herein is, and remains
+ * the property of Hyphenate Inc.
+ * Dissemination of this information or reproduction of this material
+ * is strictly forbidden unless prior written permission is obtained
+ * from Hyphenate Inc.
+ */
+
 
 #import <UIKit/UIKit.h>
 #import <Foundation/Foundation.h>
 
+#import "EMSDK.h"
+
 #define KNOTIFICATION_LOGINCHANGE @"loginStateChange"
 #define KNOTIFICATION_CALL @"callOutWithChatter"
 #define KNOTIFICATION_CALL_CLOSE @"callControllerClose"
+
+#define kGroupMessageAtList      @"em_at_list"
+#define kGroupMessageAtAll       @"all"
 
 #define kSDKConfigEnableConsoleLogger @"SDKConfigEnableConsoleLogger"
 #define kEaseUISDKConfigIsUseLite @"isUselibEaseMobClientSDKLite"
@@ -39,42 +49,39 @@ didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
                    messageType:(EMChatType)messageType
                     messageExt:(NSDictionary *)messageExt;
 
++ (EMMessage *)sendCmdMessage:(NSString *)action
+                            to:(NSString *)to
+                   messageType:(EMChatType)messageType
+                    messageExt:(NSDictionary *)messageExt
+                     cmdParams:(NSArray *)params;
+
 + (EMMessage *)sendLocationMessageWithLatitude:(double)latitude
                                      longitude:(double)longitude
                                        address:(NSString *)address
                                             to:(NSString *)to
                                    messageType:(EMChatType)messageType
-                             requireEncryption:(BOOL)requireEncryption
                                     messageExt:(NSDictionary *)messageExt;
 
 + (EMMessage *)sendImageMessageWithImageData:(NSData *)imageData
                                           to:(NSString *)to
                                  messageType:(EMChatType)messageType
-                           requireEncryption:(BOOL)requireEncryption
-                                  messageExt:(NSDictionary *)messageExt
-                                    progress:(id)progress;
+                                  messageExt:(NSDictionary *)messageExt;
 
 + (EMMessage *)sendImageMessageWithImage:(UIImage *)image
                                       to:(NSString *)to
                              messageType:(EMChatType)messageType
-                       requireEncryption:(BOOL)requireEncryption
-                              messageExt:(NSDictionary *)messageExt
-                                progress:(id)progress;
+                              messageExt:(NSDictionary *)messageExt;
 
 + (EMMessage *)sendVoiceMessageWithLocalPath:(NSString *)localPath
                                     duration:(NSInteger)duration
                                           to:(NSString *)to
-                           messageType:(EMChatType)messageType
-                     requireEncryption:(BOOL)requireEncryption
-                            messageExt:(NSDictionary *)messageExt
-                                    progress:(id)progress;
+                                messageType:(EMChatType)messageType
+                                  messageExt:(NSDictionary *)messageExt;
 
 + (EMMessage *)sendVideoMessageWithURL:(NSURL *)url
                                     to:(NSString *)to
                            messageType:(EMChatType)messageType
-                     requireEncryption:(BOOL)requireEncryption
-                            messageExt:(NSDictionary *)messageExt
-                              progress:(id)progress;
+                            messageExt:(NSDictionary *)messageExt;
 
 #pragma mark - call
 

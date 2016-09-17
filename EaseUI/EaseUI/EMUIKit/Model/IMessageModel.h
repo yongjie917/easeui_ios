@@ -1,16 +1,19 @@
-//
-//  IMessageModel.h
-//  ChatDemo-UI3.0
-//
-//  Created by dhc on 15/6/26.
-//  Copyright (c) 2015年 easemob.com. All rights reserved.
-//
+/************************************************************
+ *  * Hyphenate CONFIDENTIAL
+ * __________________
+ * Copyright (C) 2016 Hyphenate Inc. All rights reserved.
+ *
+ * NOTICE: All information contained herein is, and remains
+ * the property of Hyphenate Inc.
+ * Dissemination of this information or reproduction of this material
+ * is strictly forbidden unless prior written permission is obtained
+ * from Hyphenate Inc.
+ */
 
 #import <UIKit/UIKit.h>
 #import <Foundation/Foundation.h>
 
-//#import "EMChatManagerDefs.h"
-//#import "IEMChatProgressDelegate.h"
+#import "EMSDK.h"
 
 @class EMMessage;
 @protocol IMessageModel <NSObject>
@@ -81,7 +84,7 @@
 @property (nonatomic) float progress;
 
 //消息：附件本地地址
-@property (strong, nonatomic) NSString *fileLocalPath;
+@property (strong, nonatomic, readonly) NSString *fileLocalPath;
 //消息：压缩附件本地地址
 @property (strong, nonatomic) NSString *thumbnailFileLocalPath;
 //消息：附件下载地址

@@ -1,10 +1,14 @@
-//
-//  EaseMessageModel.m
-//  ChatDemo-UI3.0
-//
-//  Created by dhc on 15/6/26.
-//  Copyright (c) 2015年 easemob.com. All rights reserved.
-//
+/************************************************************
+ *  * Hyphenate CONFIDENTIAL
+ * __________________
+ * Copyright (C) 2016 Hyphenate Inc. All rights reserved.
+ *
+ * NOTICE: All information contained herein is, and remains
+ * the property of Hyphenate Inc.
+ * Dissemination of this information or reproduction of this material
+ * is strictly forbidden unless prior written permission is obtained
+ * from Hyphenate Inc.
+ */
 
 #import "EaseMessageModel.h"
 
@@ -46,12 +50,12 @@
                     self.thumbnailImage = [UIImage imageWithContentsOfFile:imgMessageBody.thumbnailLocalPath];
                 }
                 else{
-                    self.thumbnailImage = [self scaleImage:self.image toScale:0.1];
+                    CGSize size = self.image.size;
+                    self.thumbnailImage = size.width * size.height > 200 * 200 ? [self scaleImage:self.image toScale:sqrt((200 * 200) / (size.width * size.height))] : self.image;
                 }
                 
                 self.thumbnailImageSize = self.thumbnailImage.size;
                 self.imageSize = imgMessageBody.size;
-                self.fileLocalPath = imgMessageBody.localPath;
                 if (!_isSender) {
                     self.fileURLPath = imgMessageBody.remotePath;
                 }
@@ -75,7 +79,6 @@
                 }
                 
                 // 音频路径
-                self.fileLocalPath = voiceBody.localPath;
                 self.fileURLPath = voiceBody.remotePath;
             }
                 break;
@@ -92,7 +95,6 @@
                 }
                 
                 // 视频路径
-                self.fileLocalPath = videoBody.localPath;
                 self.fileURLPath = videoBody.remotePath;
             }
                 break;
@@ -145,6 +147,26 @@
 - (BOOL)isMessageRead
 {
     return _message.isReadAcked;
+}
+
+- (NSString *)fileLocalPath
+{
+    if (_firstMessageBody) {
+        switch (_firstMessageBody.type) {
+            case EMMessageBodyTypeVideo:
+            case EMMessageBodyTypeImage:
+            case EMMessageBodyTypeVoice:
+            case EMMessageBodyTypeFile:
+            {
+                EMFileMessageBody *fileBody = (EMFileMessageBody *)_firstMessageBody;
+                return fileBody.localPath;
+            }
+                break;
+            default:
+                break;
+        }
+    }
+    return nil;
 }
 
 - (UIImage *)scaleImage:(UIImage *)image toScale:(float)scaleSize

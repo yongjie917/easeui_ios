@@ -1,10 +1,14 @@
-//
-//  EaseMessageViewController.h
-//  ChatDemo-UI3.0
-//
-//  Created by dhc on 15/6/26.
-//  Copyright (c) 2015年 easemob.com. All rights reserved.
-//
+/************************************************************
+ *  * Hyphenate CONFIDENTIAL
+ * __________________
+ * Copyright (C) 2016 Hyphenate Inc. All rights reserved.
+ *
+ * NOTICE: All information contained herein is, and remains
+ * the property of Hyphenate Inc.
+ * Dissemination of this information or reproduction of this material
+ * is strictly forbidden unless prior written permission is obtained
+ * from Hyphenate Inc.
+ */
 
 #import <MobileCoreServices/MobileCoreServices.h>
 #import <AVFoundation/AVFoundation.h>
@@ -21,6 +25,15 @@
 #import "EMCDDeviceManager+ProximitySensor.h"
 #import "UIViewController+HUD.h"
 #import "EaseSDKHelper.h"
+
+@interface EaseAtTarget : NSObject
+@property (nonatomic, copy) NSString    *userId;
+@property (nonatomic, copy) NSString    *nickname;
+
+- (instancetype)initWithUserId:(NSString*)userId andNickname:(NSString*)nickname;
+@end
+
+typedef void(^EaseSelectAtTargetCallback)(EaseAtTarget*);
 
 @class EaseMessageViewController;
 
@@ -134,6 +147,17 @@
 - (void)messageViewController:(EaseMessageViewController *)viewController
               didSelectRecordView:(UIView *)recordView
                 withEvenType:(EaseRecordViewType)type;
+
+/*!
+ @method
+ @brief 获取要@的对象
+ @discussion 用户输入了@，选择要@的对象
+ @param selectedCallback 用于回调要@的对象的block
+ @result
+ */
+- (void)messageViewController:(EaseMessageViewController *)viewController
+               selectAtTarget:(EaseSelectAtTargetCallback)selectedCallback;
+
 @end
 
 
@@ -292,7 +316,7 @@ shouldSendHasReadAckForMessage:(EMMessage *)message
 
 @end
 
-@interface EaseMessageViewController : EaseRefreshTableViewController<UINavigationControllerDelegate, UIImagePickerControllerDelegate, EMChatManagerDelegate, EMCDDeviceManagerDelegate, EMChatToolbarDelegate, EaseChatBarMoreViewDelegate, EMLocationViewDelegate,EMChatroomManagerDelegate>
+@interface EaseMessageViewController : EaseRefreshTableViewController<UINavigationControllerDelegate, UIImagePickerControllerDelegate, EMChatManagerDelegate, EMCDDeviceManagerDelegate, EMChatToolbarDelegate, EaseChatBarMoreViewDelegate, EMLocationViewDelegate,EMChatroomManagerDelegate, EaseMessageCellDelegate>
 
 @property (weak, nonatomic) id<EaseMessageViewControllerDelegate> delegate;
 
@@ -418,6 +442,16 @@ shouldSendHasReadAckForMessage:(EMMessage *)message
 
 /*!
  @method
+ @brief 发送文本消息
+ @discussion
+ @param text 文本消息
+ @param ext  扩展信息
+ @result
+ */
+- (void)sendTextMessage:(NSString *)text withExt:(NSDictionary*)ext;
+
+/*!
+ @method
  @brief 发送图片消息
  @discussion
  @param image 发送图片
@@ -468,5 +502,29 @@ shouldSendHasReadAckForMessage:(EMMessage *)message
  */
 -(void)addMessageToDataSource:(EMMessage *)message
                      progress:(id)progress;
+
+/*!
+ @method
+ @brief 显示消息长按菜单
+ @discussion
+ @param showInView  菜单的父视图
+ @param showInView  索引
+ @param messageType 消息类型
+ @result
+ */
+-(void)showMenuViewController:(UIView *)showInView
+                 andIndexPath:(NSIndexPath *)indexPath
+                  messageType:(EMMessageBodyType)messageType;
+
+/*!
+ @method
+ @brief 判断消息是否要发送已读回执
+ @discussion
+ @param message 聊天消息
+ @param read    是否附件消息已读
+ @result
+ */
+-(BOOL)shouldSendHasReadAckForMessage:(EMMessage *)message
+                                 read:(BOOL)read;
 
 @end

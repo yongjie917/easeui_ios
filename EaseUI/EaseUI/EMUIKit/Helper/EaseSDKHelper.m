@@ -1,10 +1,15 @@
-//
-//  EaseSDKHelper.m
-//  ChatDemo-UI3.0
-//
-//  Created by dhc on 15/6/24.
-//  Copyright (c) 2015年 easemob.com. All rights reserved.
-//
+/************************************************************
+ *  * Hyphenate CONFIDENTIAL
+ * __________________
+ * Copyright (C) 2016 Hyphenate Inc. All rights reserved.
+ *
+ * NOTICE: All information contained herein is, and remains
+ * the property of Hyphenate Inc.
+ * Dissemination of this information or reproduction of this material
+ * is strictly forbidden unless prior written permission is obtained
+ * from Hyphenate Inc.
+ */
+
 
 #import "EaseSDKHelper.h"
 
@@ -148,6 +153,24 @@ didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
     EMTextMessageBody *body = [[EMTextMessageBody alloc] initWithText:willSendText];
     NSString *from = [[EMClient sharedClient] currentUsername];
     EMMessage *message = [[EMMessage alloc] initWithConversationID:toUser from:from to:toUser body:body ext:messageExt];
+    message.chatType = messageType;
+    
+    return message;
+}
+
++ (EMMessage *)sendCmdMessage:(NSString *)action
+                            to:(NSString *)to
+                   messageType:(EMChatType)messageType
+                    messageExt:(NSDictionary *)messageExt
+                     cmdParams:(NSArray *)params
+{
+    EMCmdMessageBody *body = [[EMCmdMessageBody alloc] initWithAction:action];
+    if (params) {
+        body.params = params;
+    }
+    NSString *from = [[EMClient sharedClient] currentUsername];
+    EMMessage *message = [[EMMessage alloc] initWithConversationID:to from:from to:to body:body ext:messageExt];
+    message.chatType = messageType;
     
     return message;
 }
@@ -157,12 +180,12 @@ didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
                                        address:(NSString *)address
                                             to:(NSString *)to
                                    messageType:(EMChatType)messageType
-                             requireEncryption:(BOOL)requireEncryption
                                     messageExt:(NSDictionary *)messageExt
 {
     EMLocationMessageBody *body = [[EMLocationMessageBody alloc] initWithLatitude:latitude longitude:longitude address:address];
     NSString *from = [[EMClient sharedClient] currentUsername];
     EMMessage *message = [[EMMessage alloc] initWithConversationID:to from:from to:to body:body ext:messageExt];
+    message.chatType = messageType;
     
     return message;
 }
@@ -170,13 +193,12 @@ didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 + (EMMessage *)sendImageMessageWithImageData:(NSData *)imageData
                                           to:(NSString *)to
                                  messageType:(EMChatType)messageType
-                           requireEncryption:(BOOL)requireEncryption
                                   messageExt:(NSDictionary *)messageExt
-                                    progress:(id)progress
 {
     EMImageMessageBody *body = [[EMImageMessageBody alloc] initWithData:imageData displayName:@"image.png"];
     NSString *from = [[EMClient sharedClient] currentUsername];
     EMMessage *message = [[EMMessage alloc] initWithConversationID:to from:from to:to body:body ext:messageExt];
+    message.chatType = messageType;
     
     return message;
 }
@@ -184,27 +206,24 @@ didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 + (EMMessage *)sendImageMessageWithImage:(UIImage *)image
                                       to:(NSString *)to
                              messageType:(EMChatType)messageType
-                       requireEncryption:(BOOL)requireEncryption
                               messageExt:(NSDictionary *)messageExt
-                                progress:(id)progress
 {
     NSData *data = UIImageJPEGRepresentation(image, 1);
     
-    return [self sendImageMessageWithImageData:data to:to messageType:messageType requireEncryption:requireEncryption messageExt:messageExt progress:progress];
+    return [self sendImageMessageWithImageData:data to:to messageType:messageType messageExt:messageExt];
 }
 
 + (EMMessage *)sendVoiceMessageWithLocalPath:(NSString *)localPath
                                     duration:(NSInteger)duration
                                           to:(NSString *)to
                                  messageType:(EMChatType)messageType
-                           requireEncryption:(BOOL)requireEncryption
                                   messageExt:(NSDictionary *)messageExt
-                                    progress:(id)progress
 {
     EMVoiceMessageBody *body = [[EMVoiceMessageBody alloc] initWithLocalPath:localPath displayName:@"audio"];
     body.duration = (int)duration;
     NSString *from = [[EMClient sharedClient] currentUsername];
     EMMessage *message = [[EMMessage alloc] initWithConversationID:to from:from to:to body:body ext:messageExt];
+    message.chatType = messageType;
     
     return message;
 }
@@ -212,13 +231,12 @@ didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 + (EMMessage *)sendVideoMessageWithURL:(NSURL *)url
                                     to:(NSString *)to
                            messageType:(EMChatType)messageType
-                     requireEncryption:(BOOL)requireEncryption
                             messageExt:(NSDictionary *)messageExt
-                              progress:(id)progress
 {
     EMVideoMessageBody *body = [[EMVideoMessageBody alloc] initWithLocalPath:[url path] displayName:@"video.mp4"];
     NSString *from = [[EMClient sharedClient] currentUsername];
     EMMessage *message = [[EMMessage alloc] initWithConversationID:to from:from to:to body:body ext:messageExt];
+    message.chatType = messageType;
     
     return message;
 }

@@ -1,23 +1,25 @@
-//
-//  EaseConversationListViewController.m
-//  ChatDemo-UI3.0
-//
-//  Created by dhc on 15/6/25.
-//  Copyright (c) 2015年 easemob.com. All rights reserved.
-//
+/************************************************************
+ *  * Hyphenate CONFIDENTIAL
+ * __________________
+ * Copyright (C) 2016 Hyphenate Inc. All rights reserved.
+ *
+ * NOTICE: All information contained herein is, and remains
+ * the property of Hyphenate Inc.
+ * Dissemination of this information or reproduction of this material
+ * is strictly forbidden unless prior written permission is obtained
+ * from Hyphenate Inc.
+ */
 
 #import "EaseConversationListViewController.h"
 
-#import "EaseSDKHelper.h"
 #import "EaseEmotionEscape.h"
 #import "EaseConversationCell.h"
 #import "EaseConvertToCommonEmoticonsHelper.h"
+#import "EaseMessageViewController.h"
 #import "NSDate+Category.h"
+#import "EaseLocalDefine.h"
 
 @interface EaseConversationListViewController ()
-{
-    dispatch_queue_t refreshQueue;
-}
 
 @end
 
@@ -78,7 +80,9 @@
     cell.model = model;
     
     if (_dataSource && [_dataSource respondsToSelector:@selector(conversationListViewController:latestMessageTitleForConversationModel:)]) {
-        cell.detailLabel.attributedText =  [[EaseEmotionEscape sharedInstance] attStringFromTextForChatting:[_dataSource conversationListViewController:self latestMessageTitleForConversationModel:model] textFont:cell.detailLabel.font];
+        NSMutableAttributedString *attributedText = [[_dataSource conversationListViewController:self latestMessageTitleForConversationModel:model] mutableCopy];
+        [attributedText addAttributes:@{NSFontAttributeName : cell.detailLabel.font} range:NSMakeRange(0, attributedText.length)];
+        cell.detailLabel.attributedText =  attributedText;
     } else {
         cell.detailLabel.attributedText =  [[EaseEmotionEscape sharedInstance] attStringFromTextForChatting:[self _latestMessageTitleForConversationModel:model]textFont:cell.detailLabel.font];
     }
@@ -106,6 +110,11 @@
     if (_delegate && [_delegate respondsToSelector:@selector(conversationListViewController:didSelectConversationModel:)]) {
         EaseConversationModel *model = [self.dataArray objectAtIndex:indexPath.row];
         [_delegate conversationListViewController:self didSelectConversationModel:model];
+    } else {
+        EaseConversationModel *model = [self.dataArray objectAtIndex:indexPath.row];
+        EaseMessageViewController *viewController = [[EaseMessageViewController alloc] initWithConversationChatter:model.conversation.conversationId conversationType:model.conversation.type];
+        viewController.title = model.title;
+        [self.navigationController pushViewController:viewController animated:YES];
     }
 }
 
@@ -127,72 +136,59 @@
 
 -(void)refreshAndSortView
 {
-    __weak typeof(self) weakself = self;
-    if (!refreshQueue) {
-        refreshQueue = dispatch_queue_create("com.easemob.conversation.refresh", DISPATCH_QUEUE_SERIAL);
-    }
-    dispatch_async(refreshQueue, ^{
-        if ([weakself.dataArray count] > 1) {
-            if ([[weakself.dataArray objectAtIndex:0] isKindOfClass:[EaseConversationModel class]]) {
-                NSArray* sorted = [weakself.dataArray sortedArrayUsingComparator:
-                                   ^(EaseConversationModel *obj1, EaseConversationModel* obj2){
-                                       EMMessage *message1 = [obj1.conversation latestMessage];
-                                       EMMessage *message2 = [obj2.conversation latestMessage];
-                                       if(message1.timestamp > message2.timestamp) {
-                                           return(NSComparisonResult)NSOrderedAscending;
-                                       }else {
-                                           return(NSComparisonResult)NSOrderedDescending;
-                                       }
-                                   }];
-                [weakself.dataArray removeAllObjects];
-                [weakself.dataArray addObjectsFromArray:sorted];
-            }
+    if ([self.dataArray count] > 1) {
+        if ([[self.dataArray objectAtIndex:0] isKindOfClass:[EaseConversationModel class]]) {
+            NSArray* sorted = [self.dataArray sortedArrayUsingComparator:
+                               ^(EaseConversationModel *obj1, EaseConversationModel* obj2){
+                                   EMMessage *message1 = [obj1.conversation latestMessage];
+                                   EMMessage *message2 = [obj2.conversation latestMessage];
+                                   if(message1.timestamp > message2.timestamp) {
+                                       return(NSComparisonResult)NSOrderedAscending;
+                                   }else {
+                                       return(NSComparisonResult)NSOrderedDescending;
+                                   }
+                               }];
+            [self.dataArray removeAllObjects];
+            [self.dataArray addObjectsFromArray:sorted];
         }
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [weakself.tableView reloadData];
-        });
-    });
+    }
+    [self.tableView reloadData];
 }
 
 - (void)tableViewDidTriggerHeaderRefresh
 {
-    __weak typeof(self) weakself = self;
-    if (!refreshQueue) {
-        refreshQueue = dispatch_queue_create("com.easemob.conversation.refresh", DISPATCH_QUEUE_SERIAL);
-    }
-    dispatch_async(refreshQueue, ^{
-        NSArray *conversations = [[EMClient sharedClient].chatManager getAllConversations];
-        NSArray* sorted = [conversations sortedArrayUsingComparator:
-                           ^(EMConversation *obj1, EMConversation* obj2){
-                               EMMessage *message1 = [obj1 latestMessage];
-                               EMMessage *message2 = [obj2 latestMessage];
-                               if(message1.timestamp > message2.timestamp) {
-                                   return(NSComparisonResult)NSOrderedAscending;
-                               }else {
-                                   return(NSComparisonResult)NSOrderedDescending;
-                               }
-                           }];
-        
-        
-        
-        [weakself.dataArray removeAllObjects];
-        for (EMConversation *converstion in sorted) {
-            EaseConversationModel *model = nil;
-            if (weakself.dataSource && [weakself.dataSource respondsToSelector:@selector(conversationListViewController:modelForConversation:)]) {
-                model = [weakself.dataSource conversationListViewController:weakself
-                                               modelForConversation:converstion];
-            }
-            else{
-                model = [[EaseConversationModel alloc] initWithConversation:converstion];
-            }
-            
-            if (model) {
-                [weakself.dataArray addObject:model];
-            }
+    NSArray *conversations = [[EMClient sharedClient].chatManager getAllConversations];
+    NSArray* sorted = [conversations sortedArrayUsingComparator:
+                       ^(EMConversation *obj1, EMConversation* obj2){
+                           EMMessage *message1 = [obj1 latestMessage];
+                           EMMessage *message2 = [obj2 latestMessage];
+                           if(message1.timestamp > message2.timestamp) {
+                               return(NSComparisonResult)NSOrderedAscending;
+                           }else {
+                               return(NSComparisonResult)NSOrderedDescending;
+                           }
+                       }];
+    
+    
+    
+    [self.dataArray removeAllObjects];
+    for (EMConversation *converstion in sorted) {
+        EaseConversationModel *model = nil;
+        if (self.dataSource && [self.dataSource respondsToSelector:@selector(conversationListViewController:modelForConversation:)]) {
+            model = [self.dataSource conversationListViewController:self
+                                                   modelForConversation:converstion];
+        }
+        else{
+            model = [[EaseConversationModel alloc] initWithConversation:converstion];
         }
         
-        [weakself tableViewDidFinishTriggerHeader:YES reload:YES];
-    });
+        if (model) {
+            [self.dataArray addObject:model];
+        }
+    }
+    
+    [self.tableView reloadData];
+    [self tableViewDidFinishTriggerHeader:YES reload:NO];
 }
 
 #pragma mark - EMGroupManagerDelegate

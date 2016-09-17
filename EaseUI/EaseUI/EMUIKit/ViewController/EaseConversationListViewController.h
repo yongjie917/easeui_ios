@@ -1,15 +1,21 @@
-//
-//  EaseConversationListViewController.h
-//  ChatDemo-UI3.0
-//
-//  Created by dhc on 15/6/25.
-//  Copyright (c) 2015年 easemob.com. All rights reserved.
-//
+/************************************************************
+ *  * Hyphenate CONFIDENTIAL
+ * __________________
+ * Copyright (C) 2016 Hyphenate Inc. All rights reserved.
+ *
+ * NOTICE: All information contained herein is, and remains
+ * the property of Hyphenate Inc.
+ * Dissemination of this information or reproduction of this material
+ * is strictly forbidden unless prior written permission is obtained
+ * from Hyphenate Inc.
+ */
 
 #import "EaseRefreshTableViewController.h"
 
 #import "EaseConversationModel.h"
 #import "EaseConversationCell.h"
+
+#import "EMSDK.h"
 
 typedef NS_ENUM(int, DXDeleteConvesationType) {
     DXDeleteConvesationOnly,
@@ -33,15 +39,6 @@ typedef NS_ENUM(int, DXDeleteConvesationType) {
 
 @optional
 
-//- (void)conversationListViewController:(EaseConversationListViewController *)conversationListViewController
-//                 didDeleteConversation:(id<IConversationModel>)conversation
-//                          deletionMode:(DXDeleteConvesationType)deletionType;
-//
-//- (void)conversationListViewController:(EaseConversationListViewController *)conversationListViewController
-//           didFailDeletingConversation:(id<IConversationModel>)conversation
-//                          deletionMode:(DXDeleteConvesationType)deletionType;
-
-
 @end
 
 @protocol EaseConversationListViewControllerDataSource <NSObject>
@@ -59,7 +56,7 @@ typedef NS_ENUM(int, DXDeleteConvesationType) {
  @param IConversationModel 会话模型
  @result 返回用户最后一条消息显示的内容
  */
-- (NSString *)conversationListViewController:(EaseConversationListViewController *)conversationListViewController
+- (NSAttributedString *)conversationListViewController:(EaseConversationListViewController *)conversationListViewController
       latestMessageTitleForConversationModel:(id<IConversationModel>)conversationModel;
 
 /*!
