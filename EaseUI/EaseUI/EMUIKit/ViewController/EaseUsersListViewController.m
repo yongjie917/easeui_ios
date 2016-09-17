@@ -1,16 +1,21 @@
-//
-//  EaseUsersListViewController.m
-//  ChatDemo-UI3.0
-//
-//  Created by dhc on 15/6/24.
-//  Copyright (c) 2015年 easemob.com. All rights reserved.
-//
+/************************************************************
+ *  * Hyphenate CONFIDENTIAL
+ * __________________
+ * Copyright (C) 2016 Hyphenate Inc. All rights reserved.
+ *
+ * NOTICE: All information contained herein is, and remains
+ * the property of Hyphenate Inc.
+ * Dissemination of this information or reproduction of this material
+ * is strictly forbidden unless prior written permission is obtained
+ * from Hyphenate Inc.
+ */
 
 #import "EaseUsersListViewController.h"
 
 #import "UIViewController+HUD.h"
+#import "EaseMessageViewController.h"
 
-@interface EaseUsersListViewController ()<EMChatManagerDelegate>
+@interface EaseUsersListViewController ()
 
 @property (strong, nonatomic) UISearchBar *searchBar;
 
@@ -22,7 +27,7 @@
 {
     self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
     if (self) {
-        [[EaseMob sharedInstance].chatManager addDelegate:self delegateQueue:nil];
+        
     }
     return self;
 }
@@ -30,6 +35,8 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     // Do any additional setup after loading the view.
+    
+    [self tableViewDidTriggerHeaderRefresh];
 }
 
 - (void)didReceiveMemoryWarning {
@@ -113,60 +120,68 @@
 {
     [tableView deselectRowAtIndexPath:indexPath animated:YES];
     
-    if (_delegate && [_delegate respondsToSelector:@selector(userListViewController:didSelectUserModel:)]) {
-        id<IUserModel> model = nil;
-        if ([_dataSource respondsToSelector:@selector(userListViewController:userModelForIndexPath:)]) {
-            model = [_dataSource userListViewController:self userModelForIndexPath:indexPath];
-        }
-        else {
-            model = [self.dataArray objectAtIndex:indexPath.row];
-        }
-        
-        if (model) {
-            [_delegate userListViewController:self didSelectUserModel:model];
-        }
+    id<IUserModel> model = nil;
+    if (_dataSource && [_dataSource respondsToSelector:@selector(userListViewController:userModelForIndexPath:)]) {
+        model = [_dataSource userListViewController:self userModelForIndexPath:indexPath];
     }
-}
+    else {
+        model = [self.dataArray objectAtIndex:indexPath.row];
+    }
+    
+    if (model) {
+        if (_delegate && [_delegate respondsToSelector:@selector(userListViewController:didSelectUserModel:)]) {
+            [_delegate userListViewController:self didSelectUserModel:model];
+        } else {
+            EaseMessageViewController *viewController = [[EaseMessageViewController alloc] initWithConversationChatter:model.buddy conversationType:EMConversationTypeChat];
+            viewController.title = model.nickname;
+            [self.navigationController pushViewController:viewController animated:YES];
+        }
+    }}
 
 #pragma mark - data
 
 - (void)tableViewDidTriggerHeaderRefresh
 {
-    __weak typeof(self) weakSelf = self;
-    [[[EaseMob sharedInstance] chatManager] asyncFetchBuddyListWithCompletion:^(NSArray *buddyList, EMError *error) {
+    __weak typeof(self) weakself = self;
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        EMError *error = nil;
+        NSArray *buddyList = [[EMClient sharedClient].contactManager getContactsFromServerWithError:&error];
         if (!error) {
-            [weakSelf.dataArray removeAllObjects];
             NSMutableArray *contactsSource = [NSMutableArray arrayWithArray:buddyList];
+            NSMutableArray *tempDataArray = [NSMutableArray array];
             
             //从获取的数据中剔除黑名单中的好友
-            NSArray *blockList = [[EaseMob sharedInstance].chatManager blockedList];
-            for (NSInteger i = (buddyList.count - 1); i >= 0; i--) {
-                EMBuddy *buddy = [buddyList objectAtIndex:i];
-                if (![blockList containsObject:buddy.username]) {
+            NSArray *blockList = [[EMClient sharedClient].contactManager getBlackListFromDB];
+            for (NSInteger i = 0; i < buddyList.count; i++) {
+                NSString *buddy = [buddyList objectAtIndex:i];
+                if (![blockList containsObject:buddy]) {
                     [contactsSource addObject:buddy];
                     
                     id<IUserModel> model = nil;
-                    if (weakSelf.dataSource && [weakSelf.dataSource respondsToSelector:@selector(userListViewController:modelForBuddy:)]) {
-                        model = [weakSelf.dataSource userListViewController:self modelForBuddy:buddy];
+                    if (weakself.dataSource && [weakself.dataSource respondsToSelector:@selector(userListViewController:modelForBuddy:)]) {
+                        model = [weakself.dataSource userListViewController:self modelForBuddy:buddy];
                     }
                     else{
                         model = [[EaseUserModel alloc] initWithBuddy:buddy];
                     }
                     
                     if(model){
-                        [weakSelf.dataArray addObject:model];
+                        [tempDataArray addObject:model];
                     }
                 }
             }
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [weakself.dataArray removeAllObjects];
+                [weakself.dataArray addObjectsFromArray:tempDataArray];
+                [weakself.tableView reloadData];
+            });
         }
-        
-        [weakSelf tableViewDidFinishTriggerHeader:YES reload:YES];
-    } onQueue:nil];
+        [weakself tableViewDidFinishTriggerHeader:YES reload:NO];
+    });
 }
 
 - (void)dealloc
 {
-    [[EaseMob sharedInstance].chatManager removeDelegate:self];
 }
 
 @end

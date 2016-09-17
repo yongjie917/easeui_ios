@@ -1,10 +1,14 @@
-//
-//  EaseRefreshTableViewController.m
-//  ChatDemo-UI3.0
-//
-//  Created by dhc on 15/6/24.
-//  Copyright (c) 2015年 easemob.com. All rights reserved.
-//
+/************************************************************
+ *  * Hyphenate CONFIDENTIAL
+ * __________________
+ * Copyright (C) 2016 Hyphenate Inc. All rights reserved.
+ *
+ * NOTICE: All information contained herein is, and remains
+ * the property of Hyphenate Inc.
+ * Dissemination of this information or reproduction of this material
+ * is strictly forbidden unless prior written permission is obtained
+ * from Hyphenate Inc.
+ */
 
 #import "EaseRefreshTableViewController.h"
 
@@ -64,14 +68,14 @@
         _showRefreshHeader = showRefreshHeader;
         if (_showRefreshHeader) {
             __weak EaseRefreshTableViewController *weakSelf = self;
-            MJRefreshLegendHeader *header = [self.tableView addLegendHeaderWithRefreshingBlock:^{
+            self.tableView.mj_header = [MJRefreshNormalHeader headerWithRefreshingBlock:^{
                 [weakSelf tableViewDidTriggerHeaderRefresh];
-                [weakSelf.tableView.header beginRefreshing];
+                [weakSelf.tableView.mj_header beginRefreshing];
             }];
-            header.updatedTimeHidden = YES;
+            //            header.updatedTimeHidden = YES;
         }
         else{
-            [self.tableView removeHeader];
+            //            [self.tableView removeHeader];
         }
     }
 }
@@ -82,13 +86,13 @@
         _showRefreshFooter = showRefreshFooter;
         if (_showRefreshFooter) {
             __weak EaseRefreshTableViewController *weakSelf = self;
-            [self.tableView addLegendFooterWithRefreshingBlock:^{
+            self.tableView.mj_footer = [MJRefreshBackNormalFooter footerWithRefreshingBlock:^{
                 [weakSelf tableViewDidTriggerFooterRefresh];
-                [weakSelf.tableView.footer beginRefreshing];
+                [weakSelf.tableView.mj_footer beginRefreshing];
             }];
         }
         else{
-            [self.tableView removeFooter];
+            //            [self.tableView removeFooter];
         }
     }
 }
@@ -194,10 +198,10 @@
         }
         
         if (isHeader) {
-            [weakSelf.tableView.header endRefreshing];
+            [weakSelf.tableView.mj_header endRefreshing];
         }
         else{
-            [weakSelf.tableView.footer endRefreshing];
+            [weakSelf.tableView.mj_footer endRefreshing];
         }
     });
 }

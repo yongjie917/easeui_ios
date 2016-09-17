@@ -1,10 +1,14 @@
-//
-//  EaseBaseMessageCell.m
-//  ChatDemo-UI3.0
-//
-//  Created by dhc on 15/6/30.
-//  Copyright (c) 2015年 easemob.com. All rights reserved.
-//
+/************************************************************
+ *  * Hyphenate CONFIDENTIAL
+ * __________________
+ * Copyright (C) 2016 Hyphenate Inc. All rights reserved.
+ *
+ * NOTICE: All information contained herein is, and remains
+ * the property of Hyphenate Inc.
+ * Dissemination of this information or reproduction of this material
+ * is strictly forbidden unless prior written permission is obtained
+ * from Hyphenate Inc.
+ */
 
 #import "EaseBaseMessageCell.h"
 
@@ -22,6 +26,7 @@
 
 @property (nonatomic) NSLayoutConstraint *bubbleWithNameTopConstraint;
 @property (nonatomic) NSLayoutConstraint *bubbleWithoutNameTopConstraint;
+@property (nonatomic) NSLayoutConstraint *bubbleWithImageConstraint;
 
 @end
 
@@ -76,11 +81,11 @@
     [super layoutSubviews];
     _bubbleView.backgroundImageView.image = self.model.isSender ? self.sendBubbleBackgroundImage : self.recvBubbleBackgroundImage;
     switch (self.model.bodyType) {
-        case eMessageBodyType_Text:
+        case EMMessageBodyTypeText:
         {
         }
             break;
-        case eMessageBodyType_Image:
+        case EMMessageBodyTypeImage:
         {
             CGSize retSize = self.model.thumbnailImageSize;
             if (retSize.width == 0 || retSize.height == 0) {
@@ -97,22 +102,27 @@
                 retSize.width = width;
                 retSize.height = kEMMessageImageSizeHeight;
             }
-            [self addConstraint:[NSLayoutConstraint constraintWithItem:self.bubbleView attribute:NSLayoutAttributeWidth relatedBy:NSLayoutRelationLessThanOrEqual toItem:nil attribute:NSLayoutAttributeNotAnAttribute multiplier:1.0 constant:retSize.width + EaseMessageCellPadding * 2]];
+            [self removeConstraint:self.bubbleWithImageConstraint];
+            
+            CGFloat margin = [EaseMessageCell appearance].leftBubbleMargin.left + [EaseMessageCell appearance].leftBubbleMargin.right;
+            self.bubbleWithImageConstraint = [NSLayoutConstraint constraintWithItem:self.bubbleView attribute:NSLayoutAttributeWidth relatedBy:NSLayoutRelationEqual toItem:nil attribute:NSLayoutAttributeNotAnAttribute multiplier:1.0 constant:retSize.width + margin];
+            
+            [self addConstraint:self.bubbleWithImageConstraint];
         }
             break;
-        case eMessageBodyType_Location:
+        case EMMessageBodyTypeLocation:
         {
         }
             break;
-        case eMessageBodyType_Voice:
+        case EMMessageBodyTypeVoice:
         {
         }
             break;
-        case eMessageBodyType_Video:
+        case EMMessageBodyTypeVideo:
         {
         }
             break;
-        case eMessageBodyType_File:
+        case EMMessageBodyTypeFile:
         {
         }
             break;
@@ -225,14 +235,14 @@
     if (self.model.isSender) {
         _hasRead.hidden = YES;
         switch (self.model.messageStatus) {
-            case eMessageDeliveryState_Delivering:
+            case EMMessageStatusDelivering:
             {
                 _statusButton.hidden = YES;
                 [_activity setHidden:NO];
                 [_activity startAnimating];
             }
                 break;
-            case eMessageDeliveryState_Delivered:
+            case EMMessageStatusSuccessed:
             {
                 _statusButton.hidden = YES;
                 [_activity stopAnimating];
@@ -241,8 +251,8 @@
                 }
             }
                 break;
-            case eMessageDeliveryState_Pending:
-            case eMessageDeliveryState_Failure:
+            case EMMessageStatusPending:
+            case EMMessageStatusFailed:
             {
                 [_activity stopAnimating];
                 [_activity setHidden:YES];

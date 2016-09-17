@@ -1,10 +1,14 @@
-//
-//  EaseConversationCell.m
-//  ChatDemo-UI3.0
-//
-//  Created by dhc on 15/6/25.
-//  Copyright (c) 2015年 easemob.com. All rights reserved.
-//
+/************************************************************
+ *  * Hyphenate CONFIDENTIAL
+ * __________________
+ * Copyright (C) 2016 Hyphenate Inc. All rights reserved.
+ *
+ * NOTICE: All information contained herein is, and remains
+ * the property of Hyphenate Inc.
+ * Dissemination of this information or reproduction of this material
+ * is strictly forbidden unless prior written permission is obtained
+ * from Hyphenate Inc.
+ */
 
 #import "EaseConversationCell.h"
 
@@ -159,7 +163,7 @@ CGFloat const EaseConversationCellPadding = 10;
         self.titleLabel.text = _model.title;
     }
     else{
-        self.titleLabel.text = _model.conversation.chatter;
+        self.titleLabel.text = _model.conversation.conversationId;
     }
     
     if (self.showAvatar) {

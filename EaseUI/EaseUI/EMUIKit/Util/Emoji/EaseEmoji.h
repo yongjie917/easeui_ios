@@ -1,8 +1,13 @@
-/*!
- @header EaseEmoji.h
- @abstract 提供对iOS内置表情编码处理
- @author EaseMob Inc.
- @version 1.00 2014/01/01 Creation (1.00)
+/************************************************************
+ *  * Hyphenate CONFIDENTIAL
+ * __________________
+ * Copyright (C) 2016 Hyphenate Inc. All rights reserved.
+ *
+ * NOTICE: All information contained herein is, and remains
+ * the property of Hyphenate Inc.
+ * Dissemination of this information or reproduction of this material
+ * is strictly forbidden unless prior written permission is obtained
+ * from Hyphenate Inc.
  */
 
 #import <Foundation/Foundation.h>
@@ -41,4 +46,14 @@
  @result iOS表情字符串数组
  */
 + (NSArray *)allEmoji;
+
+/*!
+ @method
+ @brief 判断字符是否为Emoji
+ @discussion
+ @param string 需要判断是否为emoji的字符
+ @result 字符是否为Emoji
+ */
++ (BOOL)stringContainsEmoji:(NSString *)string;
+
 @end

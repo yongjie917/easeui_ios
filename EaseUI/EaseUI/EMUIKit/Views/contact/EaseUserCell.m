@@ -1,15 +1,18 @@
-//
-//  EaseUserCell.m
-//  ChatDemo-UI3.0
-//
-//  Created by dhc on 15/6/24.
-//  Copyright (c) 2015年 easemob.com. All rights reserved.
-//
+/************************************************************
+ *  * Hyphenate CONFIDENTIAL
+ * __________________
+ * Copyright (C) 2016 Hyphenate Inc. All rights reserved.
+ *
+ * NOTICE: All information contained herein is, and remains
+ * the property of Hyphenate Inc.
+ * Dissemination of this information or reproduction of this material
+ * is strictly forbidden unless prior written permission is obtained
+ * from Hyphenate Inc.
+ */
 
 #import "EaseUserCell.h"
 
 #import "EaseImageView.h"
-#import "EMBuddy.h"
 #import "UIImageView+EMWebCache.h"
 
 CGFloat const EaseUserCellPadding = 10;
@@ -115,7 +118,7 @@ CGFloat const EaseUserCellPadding = 10;
         self.titleLabel.text = _model.nickname;
     }
     else{
-       self.titleLabel.text = _model.buddy.username;
+       self.titleLabel.text = _model.buddy;
     }
     
     if ([_model.avatarURLPath length] > 0){

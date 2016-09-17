@@ -1,16 +1,22 @@
-//
-//  EMChatToolbar.m
-//  ChatDemo-UI3.0
-//
-//  Created by dhc on 15/7/1.
-//  Copyright (c) 2015年 easemob.com. All rights reserved.
-//
+/************************************************************
+ *  * Hyphenate CONFIDENTIAL
+ * __________________
+ * Copyright (C) 2016 Hyphenate Inc. All rights reserved.
+ *
+ * NOTICE: All information contained herein is, and remains
+ * the property of Hyphenate Inc.
+ * Dissemination of this information or reproduction of this material
+ * is strictly forbidden unless prior written permission is obtained
+ * from Hyphenate Inc.
+ */
 
 #import "EaseChatToolbar.h"
 
 #import "EaseFaceView.h"
 #import "EaseEmoji.h"
 #import "EaseEmotionEscape.h"
+#import "EaseEmotionManager.h"
+#import "EaseLocalDefine.h"
 
 @interface EaseChatToolbar()<UITextViewDelegate, EMFaceDelegate>
 
@@ -45,8 +51,6 @@
 @property (nonatomic) CGFloat previousTextViewContentHeight;//上一次inputTextView的contentSize.height
 @property (nonatomic) NSLayoutConstraint *inputViewWidthItemsLeftConstraint;
 @property (nonatomic) NSLayoutConstraint *inputViewWidthoutItemsLeftConstraint;
-
-@property (strong, nonatomic) NSArray *defaultEmoji;
 
 @end
 
@@ -101,8 +105,6 @@
         _activityButtomView = nil;
         _isShowButtomView = NO;
         
-        _defaultEmoji = [EaseEmoji allEmoji];
-        
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(chatKeyboardWillChangeFrame:) name:UIKeyboardWillChangeFrameNotification object:nil];
         
         [self _setupSubviews];
@@ -137,7 +139,7 @@
     _inputTextView.scrollEnabled = YES;
     _inputTextView.returnKeyType = UIReturnKeySend;
     _inputTextView.enablesReturnKeyAutomatically = YES; // UITextView内部判断send按钮是否可以用
-    _inputTextView.placeHolder = NSLocalizedString(@"message.toolBar.inputPlaceHolder", @"input a new message");
+    _inputTextView.placeHolder = NSEaseLocalizedString(@"message.toolBar.inputPlaceHolder", @"input a new message");
     _inputTextView.delegate = self;
     _inputTextView.backgroundColor = [UIColor clearColor];
     _inputTextView.layer.borderColor = [UIColor colorWithWhite:0.8f alpha:1.0f].CGColor;
@@ -239,7 +241,7 @@
 
 #pragma mark - setter
 
-- (void)setDelegate:(id<EMChatToolbarDelegate>)delegate
+- (void)setDelegate:(id)delegate
 {
     _delegate = delegate;
     if ([_moreView isKindOfClass:[EaseChatBarMoreView class]]) {
@@ -280,6 +282,11 @@
             }
         }
     }
+}
+
+- (NSArray*)inputViewLeftItems
+{
+    return self.leftItems;
 }
 
 - (void)setInputViewLeftItems:(NSArray *)inputViewLeftItems
@@ -326,6 +333,11 @@
     recordFrame.origin.x = inputFrame.origin.x;
     recordFrame.size.width = inputFrame.size.width;
     self.recordButton.frame = recordFrame;
+}
+
+- (NSArray*)inputViewRightItems
+{
+    return self.rightItems;
 }
 
 - (void)setInputViewRightItems:(NSArray *)inputViewRightItems
@@ -532,10 +544,24 @@
         if ([self.delegate respondsToSelector:@selector(didSendText:)]) {
             [self.delegate didSendText:textView.text];
             self.inputTextView.text = @"";
-            [self _willShowInputTextViewToHeight:[self _getTextViewContentH:self.inputTextView]];;
+            [self _willShowInputTextViewToHeight:[self _getTextViewContentH:self.inputTextView]];
         }
         
         return NO;
+    }
+    else if ([text isEqualToString:@"@"]) {
+        if ([self.delegate respondsToSelector:@selector(didInputAtInLocation:)]) {
+            if ([self.delegate didInputAtInLocation:range.location]) {
+                [self _willShowInputTextViewToHeight:[self _getTextViewContentH:self.inputTextView]];
+                return NO;
+            }
+        }
+    }
+    else if ([text length] == 0) {
+        //delete one character
+        if (range.length == 1 && [self.delegate respondsToSelector:@selector(didDeleteCharacterFromLocation:)]) {
+            return ![self.delegate didDeleteCharacterFromLocation:range.location];
+        }
     }
     return YES;
 }
@@ -554,22 +580,41 @@
     NSMutableAttributedString *attr = [[NSMutableAttributedString alloc] initWithAttributedString:self.inputTextView.attributedText];
     
     if (!isDelete && str.length > 0) {
-        NSRange range = [self.inputTextView selectedRange];
-        [attr insertAttributedString:[EaseEmotionEscape attStringFromTextForInputView:str] atIndex:range.location];
-        self.inputTextView.text = @"";
-        self.inputTextView.attributedText = attr;
-//        self.inputTextView.text = [NSString stringWithFormat:@"%@%@",chatText,str];
+        if (self.version >= 7.0) {
+            NSRange range = [self.inputTextView selectedRange];
+            [attr insertAttributedString:[[EaseEmotionEscape sharedInstance] attStringFromTextForInputView:str textFont:self.inputTextView.font] atIndex:range.location];
+            self.inputTextView.attributedText = attr;
+        } else {
+            self.inputTextView.text = @"";
+            self.inputTextView.text = [NSString stringWithFormat:@"%@%@",chatText,str];
+        }
     }
     else {
-        if (chatText.length > 0) {
-            NSInteger length = 1;
-            if (chatText.length >= 2) {
+        if (self.version >= 7.0) {
+            if (chatText.length > 0) {
+                NSInteger length = 1;
+                if (chatText.length >= 2) {
+                    NSString *subStr = [chatText substringFromIndex:chatText.length-2];
+                    if ([EaseEmoji stringContainsEmoji:subStr]) {
+                        length = 2;
+                    }
+                }
+                self.inputTextView.attributedText = [self backspaceText:attr length:length];
+            }
+        } else {
+            if (chatText.length >= 2)
+            {
                 NSString *subStr = [chatText substringFromIndex:chatText.length-2];
-                if ([_defaultEmoji containsObject:subStr]) {
-                    length = 2;
+                if ([(EaseFaceView *)self.faceView stringIsFace:subStr]) {
+                    self.inputTextView.text = [chatText substringToIndex:chatText.length-2];
+                    [self textViewDidChange:self.inputTextView];
+                    return;
                 }
             }
-            self.inputTextView.attributedText = [self backspaceText:attr length:length];
+            
+            if (chatText.length > 0) {
+                self.inputTextView.text = [chatText substringToIndex:chatText.length-1];
+            }
         }
     }
     
@@ -603,7 +648,7 @@
                  {
                      if (value) {
                          EMTextAttachment* attachment = (EMTextAttachment*)value;
-                         NSString *str = [NSString stringWithFormat:@"\\::a%@]",attachment.imageName];
+                         NSString *str = [NSString stringWithFormat:@"%@",attachment.imageName];
                          [attStr replaceCharactersInRange:range withString:str];
                      }
                  }];
@@ -615,11 +660,11 @@
     }
 }
 
-- (void)sendFaceWithEmotion:(NSString *)emotion
+- (void)sendFaceWithEmotion:(EaseEmotion *)emotion
 {
-    if (emotion.length > 0) {
-        if ([self.delegate respondsToSelector:@selector(didSendText:)]) {
-            [self.delegate didSendText:@"[动画表情]" withExt:@{@"em_emotion":emotion}];
+    if (emotion) {
+        if ([self.delegate respondsToSelector:@selector(didSendText:withExt:)]) {
+            [self.delegate didSendText:emotion.emotionTitle withExt:@{EASEUI_EMOTION_DEFAULT_EXT:emotion}];
             [self _willShowInputTextViewToHeight:[self _getTextViewContentH:self.inputTextView]];;
         }
     }
@@ -829,6 +874,11 @@
         [(EaseRecordView *)_recordView recordButtonTouchUpInside];
         [_recordView removeFromSuperview];
     }
+}
+
+- (void)willShowBottomView:(UIView *)bottomView
+{
+    [self _willShowBottomView:bottomView];
 }
 
 @end
